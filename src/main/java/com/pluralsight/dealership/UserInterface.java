@@ -26,6 +26,7 @@ public class UserInterface {
             System.out.println("7. Get all vehicles");
             System.out.println("8. Add vehicle");
             System.out.println("9. Remove vehicle");
+            System.out.println("10. Sell/Lease a Vehicle");
             System.out.println("99. Quit");
 
             System.out.print("Enter your choice: ");
@@ -58,6 +59,9 @@ public class UserInterface {
                     break;
                 case "9":
                     processRemoveVehicleRequest();
+                    break;
+                case "10":
+                    processSellLeaseVehicleRequest();
                     break;
                 case "99":
                     quit = true;
@@ -183,6 +187,62 @@ public class UserInterface {
         manager.saveDealership(dealership);
     }
 
+    public void processSellLeaseVehicleRequest() {
+        System.out.print("Enter the Date: ");
+        String date = scanner.nextLine();
+
+        System.out.print("Enter your name: ");
+        String name = scanner.nextLine();
+
+        System.out.print("Enter your Email: ");
+        String email = scanner.nextLine();
+
+        System.out.println("Enter the Vin: ");
+        int vin = scanner.nextInt();
+        scanner.nextLine();
+
+        Vehicle vehicle = null;
+        for (Vehicle vehicleFound : dealership.getAllVehicles()) {
+            if (vehicleFound.getVin() == vin) {
+                vehicle = vehicleFound;
+            }
+        }
+
+        if (vehicle == null) {
+            System.out.println("Vehicle not found. Please try again.");
+            return;
+        }
+        System.out.println("Enter Sale or Lease: ");
+        String saleOrLease = scanner.nextLine();
+
+        int processingFee;
+        if (vehicle.getPrice() < 10000) {
+            processingFee = 295;
+        }else {
+            processingFee = 495;
+        }
+        if (saleOrLease.equalsIgnoreCase("Sale")) {
+            System.out.print("Would you like to finance? (Yes/No): ");
+            String finance = scanner.nextLine();
+            boolean isFinance = finance.equalsIgnoreCase("Yes");
+            SalesContract salesContract = new SalesContract(date, name, email, vehicle,0.05, 100, processingFee, isFinance);
+
+            ContractFileManager contractFileManager = new ContractFileManager();
+            contractFileManager.saveContract(salesContract);
+
+        } else if (saleOrLease.equalsIgnoreCase("Lease")) {
+            boolean isLease = scanner.nextLine().equalsIgnoreCase("No");
+            LeaseContract leaseContract = new LeaseContract(date, name,email, vehicle, vehicle.getPrice() * 0.50, vehicle.getPrice() * 0.07);
+
+            ContractFileManager contractFileManager = new ContractFileManager();
+            contractFileManager.saveContract(leaseContract);
+        }
+        dealership.removeVehicle(vehicle);
+
+        DealershipFileManager dealershipFileManager = new DealershipFileManager();
+        dealershipFileManager.saveDealership(dealership);
+    }
+
     private void init() {
         DealershipFileManager manager = new DealershipFileManager();
         dealership = manager.getDealership();
@@ -193,5 +253,4 @@ public class UserInterface {
             System.out.println(vehicle.toString());
         }
     }
-
 }
